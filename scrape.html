@@ -9,42 +9,63 @@
         <script src="https://code.jquery.com/jquery-2.1.4.js"></script>
         <style>
             pre {
-                width: 800px;
+                width: 400px;
                 background-color: #eee;
                 margin: 20px;
                 padding: 5px;
+                overflow: hidden;
+            }
+            div.column {
+              float:left;
             }
         </style>
     </head>
     <body>
-        <h3> sites </h3>
+      <div class='column' >
+        <h3> sites todo</h3>
         <pre class="sites todo"></pre>
+        <h3> sites done</h3>
         <pre class="sites done"></pre>
-        <h3> pages </h3>
+      </div>
+      <div class='column'>
+        <h3> pages todo </h3>
         <pre class="pages todo"></pre>
+      </div>
+      <div class='column'>
+        <h3> pages done</h3>
         <pre class="pages done"></pre>
+      </div>
         <script>
 
         function main() {
 
-            var sites_todo = ['journal.hapgood.net'],
+            var sites_todo = ['journal.hapgood.net', 'forage.ward.fed.wiki.org', 'david.viral.academy'],
                 sites_done = [];
 
             var pages_todo = [],
                 pages_done = [];
 
-            var oldest = Date.now() - 1000*60*60*24*30
+            var oldest = Date.now() - 1000*60*60*24*21
+
+            function chronological (a, b) {
+              return a.date - b.date
+            }
 
             function show(id,list) {
+                $(id).text(list.join("\n"));
+                return list;
+            }
+
+            function showr(id,list) {
                 $(id).text(list.slice().reverse().join("\n"));
                 return list;
             }
 
             function report() {
-                show('.sites.todo',sites_todo);
-                show('.sites.done',sites_done);
+                showr('.sites.todo',sites_todo);
+                showr('.sites.done',sites_done);
                 show('.pages.todo',pages_todo);
-                show('.pages.done',pages_done);
+                showr('.pages.done',pages_done);
             }
 
             function new_site (site) {
@@ -75,12 +96,14 @@
                             if (new_page(site_page)) {
                                 pages_todo.push(site_page)
                             }
-                            report();
+                            //report();
                         }
                     }
                     catch (e) {
                     }
                 }
+                pages_todo.sort(chronological);
+                //report();
             }
 
             function do_page(site, slug, page) {
@@ -102,23 +125,23 @@
                         if (action.site && new_site(action.site)) {
                             sites_todo.push(action.site)
                         }
-                    }                    
+                    }
                 }
-                catch (e) {              
+                catch (e) {
                 }
 
             }
 
             function fetch_site(site) {
-                sites_done.push(site); report()
+                sites_done.push(site); //report()
                 var url = 'http://' + site + '/system/sitemap.json';
                 $.getJSON(url, function(sitemap) {
                     do_site(site, sitemap)
-                })                   
+                })
             }
 
             function fetch_page(site_page) {
-                pages_done.push(site_page); report()
+                pages_done.push(site_page); //report()
                 var detail = site_page.split('/'),
                     url = 'http://' + detail[0] + '/' + detail[1] + '.json'
                 $.getJSON(url, function(page) {
@@ -133,6 +156,7 @@
                 if (pages_todo.length) {
                     fetch_page(pages_todo.shift())
                 }
+                report()
             }
 
             setInterval(next, 500)
